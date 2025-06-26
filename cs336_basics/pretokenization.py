@@ -1,5 +1,19 @@
+from typing import BinaryIO, List, Tuple
 import os, math
-from typing import BinaryIO, List
+
+def find_special_token_pos(pattern: bytes, special_tokens: List[bytes]) -> Tuple[int, int]:
+    found_at = -1
+    length = -1
+    for special_token in special_tokens:
+        found_at_this = pattern.find(special_token)
+        if found_at_this != -1:
+            if found_at == -1:
+                found_at = found_at_this
+                length = len(special_token)
+            elif (found_at_this < found_at):
+                found_at = found_at_this
+                length = len(special_token)
+    return found_at, length
 
 def find_chunk_boundaries(
     file: BinaryIO, 
@@ -42,14 +56,8 @@ def find_chunk_boundaries(
                 break
 
             # Find the special token in the mini chunk
-            found_at = -1
-            for special_token in special_tokens:
-                found_at_this = mini_chunk.find(special_token)
-                if found_at_this != -1:
-                    if found_at == -1:
-                        found_at = found_at_this
-                    else:
-                        found_at = min(found_at, found_at_this)
+            found_at, _ = find_special_token_pos(mini_chunk, special_tokens)
+
             if found_at != -1:
                 chunk_boundaries[bi] = initial_position + found_at
                 break
