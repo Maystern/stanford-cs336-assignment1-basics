@@ -1,11 +1,22 @@
 from typing import BinaryIO, List, Tuple
 import os, math
+import re
+
+
+def find_all_regex(data: bytes, sub: bytes) -> int:
+    """使用正则表达式查找子字节串的所有位置"""
+    # 注意：需要使用 re.escape() 处理子字节串中的特殊字符
+    pattern = re.escape(sub)
+    l = [m.start() for m in re.finditer(pattern, data)]
+    if len(l) == 0: return -1
+    return min(l)
+
 
 def find_special_token_pos(pattern: bytes, special_tokens: List[bytes]) -> Tuple[int, int]:
     found_at = -1
     length = -1
     for special_token in special_tokens:
-        found_at_this = pattern.find(special_token)
+        found_at_this = find_all_regex(pattern, special_token)
         if found_at_this != -1:
             if found_at == -1:
                 found_at = found_at_this
