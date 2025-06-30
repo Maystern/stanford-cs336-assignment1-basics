@@ -12,16 +12,13 @@
                 "PYTHONPATH": "${workspaceFolder}"
             }
         },
-        {
+       {
             "name": "BPE Tokenizer - Main Debugger",
             "type": "debugpy",
             "request": "launch",
-            "module": "pytest",
-            "args": ["tests/test_train_bpe.py"],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
+            "program": "cs336_basics/train_bpe.py",
+            "args": [],
+            "console": "integratedTerminal"
+        }
     ]
 }
