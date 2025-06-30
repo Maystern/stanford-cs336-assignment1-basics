@@ -1,10 +1,12 @@
 from typing import Tuple, Dict, List
 from cs336_basics.pretokenization import find_chunk_boundaries, find_special_token_pos
+from tqdm import tqdm
 
 import os
 import multiprocessing as mp
 import regex as re
-from tqdm import tqdm
+import cProfile
+
 
 PAT = r"""'(?:[sdmt]|ll|ve|re)| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+"""
 
@@ -30,7 +32,6 @@ def tokenization(chunk: bytes, special_tokens: list[str]) -> dict[tuple[bytes], 
             else:
                 word_count[tuple_mem] = 1
     
-    
     return word_count
 
 
@@ -44,6 +45,8 @@ def train_bpe (
     返回值 Dict[int, bytes] 表示 int -> 字符子串，初始时 utf-8 的 256 个值（+特殊的token），后续需要扩充打 vocab_size 大小的词表，首先需要确认 vocab_size >= 256
     返回值 List[tuple[bytes, bytes]] 表示 merge 的相邻的两个 bytes 数组的值
     """
+    profiler = cProfile.Profile()
+    profiler.enable()
 
     assert vocab_size >= len(special_tokens) + 256, "train_bpe err: vocab_size is too small"
     
@@ -55,15 +58,14 @@ def train_bpe (
     for vocab_idx in range(256):
         vocab[vocab_idx] = bytes([vocab_idx])
     
-    
-    # for special_token in special_tokens_utf8:
-    #     vocab_idx += 1
-    #     vocab[vocab_idx] = special_token
+    # 词表中 special tokens 需要提前写入
+    for special_token in special_tokens_utf8:
+        vocab_idx += 1
+        vocab[vocab_idx] = special_token
         
-    num_epoches = vocab_size - 256
+    num_epoches = vocab_size - 256 - len(special_tokens)
 
     num_processes = os.cpu_count()
-    # num_processes = 1
 
     chunks = []
 
@@ -107,7 +109,7 @@ def train_bpe (
             if count > max_count:
                 max_count = count
                 max_adj_token = adj_token
-            elif count == max_count and (max_adj_token == None or max_adj_token[0] + max_adj_token[1] < adj_token[0] + adj_token[1]):
+            elif count == max_count and ((max_adj_token == None) or max_adj_token < adj_token):
                 max_adj_token = adj_token
         
         assert max_adj_token is not None, "train_bpe err: vocab_size is too large"
@@ -155,19 +157,15 @@ def train_bpe (
 
         token_count = next_token_count
     
-    with open('/Users/bytedance/code/stanford-cs336-assignment1-basics/sol.txt', 'w', encoding='utf-8') as f:
-        f.write(str(vocab))
-        f.write("\n")
-        f.write(str(merge_list))
-
+    profiler.disable()
+    profiler.dump_stats("profile_results.prof")  # 保存分析结果
     return vocab, merge_list
-        
 
 
 
 if __name__ == "__main__":
     # input_path = "../data/TinyStoriesV2-GPT4-valid.txt"
-    input_path = "../data/hello.txt"
+    input_path = "/Users/bytedance/code/stanford-cs336-assignment1-basics/data/hello.txt"
     # input_path = "../data/bb.txt"
     vocab_size = 256 + 10
     special_tokens = ["<|endoftext|>"]
