@@ -160,7 +160,14 @@ cython_debug/
 #.idea/
 
 .ruff_cache/
-*.zip
+.zip
 
 *.txt
 *.out
+*.pkl
+*.out
+*.prof
+
+sol.out
+profile_results.prof
+profile_results.prof

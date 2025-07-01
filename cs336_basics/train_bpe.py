@@ -111,7 +111,7 @@ def train_bpe (
         vocab[vocab_idx] = special_token
     
     # 计算还需要 merge 多少轮，才能使得词表大小为 vocab_size
-    num_epoches = vocab_size - vocab_idx
+    num_epoches = vocab_size - vocab_idx - 1
 
     # 计算当前设备 cpu 数量，分块进行 pre-tokenization
     num_processes = os.cpu_count()
@@ -123,6 +123,7 @@ def train_bpe (
             f.seek(start)
             chunk = f.read(end - start).decode("utf-8", errors="ignore")
             chunks.append((chunk, special_tokens))
+
     with mp.Pool(processes=num_processes) as pool:
         results = pool.starmap(tokenization, chunks)
     
