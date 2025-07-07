@@ -171,3 +171,4 @@ cython_debug/
 sol.out
 profile_results.prof
 profile_results.prof
+owt_valid.txt.gz
