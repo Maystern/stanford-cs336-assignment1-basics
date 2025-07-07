@@ -2,6 +2,14 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "current file - Main Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "cs336_basics/normalization.py",
+            "args": [],
+            "console": "integratedTerminal"
+        },
+        {
             "name": "BPE Tokenizer - PyTest Debugger",
             "type": "debugpy",
             "request": "launch",
