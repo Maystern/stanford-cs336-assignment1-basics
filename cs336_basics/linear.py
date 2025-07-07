@@ -3,7 +3,7 @@ import math
 
 from torch import nn
 from einops import einsum
-from cs336_basics.activate_func import SiLU
+from cs336_basics.utils import SiLU
 
 def initial_torch_linear_weight(in_features, out_features: int, device: torch.device | None = None, dtype: torch.dtype | None = None):
     weight = torch.empty((in_features, out_features), device=device, dtype=dtype)

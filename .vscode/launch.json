@@ -76,5 +76,19 @@
                 "PYTHONPATH": "${workspaceFolder}"
             }
         },
+        {
+            "name": "softmax - PyTest Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-k",
+                "test_softmax_matches_pytorch",
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
     ]
 }
