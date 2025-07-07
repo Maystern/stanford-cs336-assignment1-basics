@@ -12,8 +12,10 @@ from torch import Tensor
 from cs336_basics.consts import PAT, DEVICE
 from cs336_basics.train_bpe import train_bpe
 from cs336_basics.tokenizer import Tokenizer
-from cs336_basics.linear import Linear, Embedding
+from cs336_basics.linear import Linear, Embedding, SwiGLU
 from cs336_basics.normalization import RMSNorm
+from cs336_basics.activate_func import SiLU
+from cs336_basics.position_embed import RoPE
 
 
 def run_linear(
@@ -92,7 +94,14 @@ def run_swiglu(
     # swiglu.w1.weight.data = w1_weight
     # swiglu.w2.weight.data = w2_weight
     # swiglu.w3.weight.data = w3_weight
-    raise NotImplementedError
+
+    SwiGLU_layer = SwiGLU(d_model, d_ff, DEVICE, w1_weight.dtype)
+    SwiGLU_layer.load_state_dict({
+        "w1_weight": w1_weight,
+        "w2_weight": w2_weight,
+        "w3_weight": w3_weight,
+    })
+    return SwiGLU_layer(in_features)
 
 
 def run_scaled_dot_product_attention(
@@ -209,7 +218,8 @@ def run_rope(
     Returns:
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
-    raise NotImplementedError
+    RoPE_layer = RoPE(theta, d_k, max_seq_len, device=DEVICE)
+    return RoPE_layer(in_query_or_key, token_positions)
 
 
 def run_transformer_block(

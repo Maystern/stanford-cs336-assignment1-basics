@@ -5,7 +5,7 @@
             "name": "current file - Main Debugger",
             "type": "debugpy",
             "request": "launch",
-            "program": "cs336_basics/normalization.py",
+            "program": "cs336_basics/position_embed.py",
             "args": [],
             "console": "integratedTerminal"
         },
@@ -56,6 +56,20 @@
                 "-k",
                 "test_linear",
                 "-v"
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "SwiGLU - PyTest Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-k",
+                "test_swiglu",
             ],
             "justMyCode": false,
             "env": {
