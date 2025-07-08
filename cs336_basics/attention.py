@@ -7,6 +7,9 @@ from cs336_basics.position_embed import RoPE
 from cs336_basics.linear import Linear
 
 def scaled_dot_product_attention(Q, K, V: torch.Tensor, mask: torch.Tensor = None):
+    """
+        flops: 4 * context_length * context_length * d_model
+    """
     d_k = K.shape[-1]
     attn_scores = einsum(Q, K, "... q d_k, ... k d_k -> ... q k")
     attn_scores /= math.sqrt(d_k)
@@ -42,33 +45,42 @@ class MultiheadSelfAttention(nn.Module):
         return self.output_proj(attn)
 
 class MultiheadSelfAttentionWithRoPE(nn.Module):
+    """
+        总的参数大小 4 * d_model * d_model
+        总的矩阵乘法 flops = 6 * d_model * d_model * d_model + 4 * context_length * context_length * d_model + 2 * context_length * d_model * d_model
+    """
     def __init__(self, d_model: int, num_heads: int, theta: float, max_seq_len: int, device: torch.device | None = None, dtype: torch.dtype | None = None):
         super().__init__()
 
         self.d_model = d_model
         self.num_heads = num_heads
 
-        self.q_proj = Linear(d_model, d_model)
-        self.k_proj = Linear(d_model, d_model)
-        self.v_proj = Linear(d_model, d_model)
-        self.output_proj = Linear(d_model, d_model)
+        self.q_proj = Linear(d_model, d_model) # 参数大小：d_model * d_model
+        self.k_proj = Linear(d_model, d_model) # 参数大小：d_model * d_model
+        self.v_proj = Linear(d_model, d_model) # 参数大小：d_model * d_model
+        self.output_proj = Linear(d_model, d_model) # 参数大小：d_model * d_model
 
         self.RoPE_layer = RoPE(theta, d_model // num_heads, max_seq_len, device)
 
     def forward(self, x: torch.Tensor, token_positions: torch.Tensor):
         seq_len = x.shape[-2]
         
+        # flops: 2 * d_model * d_model * d_model
         Q = rearrange(self.q_proj(x), "... seq_len (h d_k) -> ... h seq_len d_k", h = self.num_heads)
         Q = self.RoPE_layer(Q, token_positions)
 
+        # flops: 2 * d_model * d_model * d_model
         K = rearrange(self.k_proj(x), "... seq_len (h d_k) -> ... h seq_len d_k", h = self.num_heads)
         K = self.RoPE_layer(K, token_positions)
 
+        # flops: 2 * d_model * d_model * d_model
         V = rearrange(self.v_proj(x), "... seq_len (h d_v) -> ... h seq_len d_v", h = self.num_heads)
 
         mask = torch.tril(torch.ones(seq_len, seq_len)).bool()
 
+        # flops: 4 * context_length * context_length * d_model
         attn = scaled_dot_product_attention(Q, K, V, mask)
         attn = rearrange(attn, "... h seq_len d_v -> ... seq_len (h d_v)", h = self.num_heads)
         
+        # flops: 2 * context_length * d_model * d_model
         return self.output_proj(attn)

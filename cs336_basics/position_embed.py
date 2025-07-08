@@ -13,7 +13,8 @@ class RoPE(nn.Module):
     def forward(self, x: torch.Tensor, token_positions: torch.Tensor) -> torch.Tensor:
         cos_theta = self.cos_table[token_positions]
         sin_theta = self.sin_table[token_positions]
-
+        
+        # 二维向量旋转：https://github.com/berwin/Blog/issues/57
         rot_matrix = torch.stack([
             cos_theta, -sin_theta,
             sin_theta,  cos_theta

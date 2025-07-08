@@ -21,6 +21,8 @@ dependencies = [
     "ipykernel>=6.29.5",
     "snakeviz>=2.2.2",
     "rich>=14.0.0",
+    "pysize>=0.1",
+    "pympler>=1.1",
 ]
 
 

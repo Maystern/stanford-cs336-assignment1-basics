@@ -22,3 +22,9 @@ def initial_torch_embedding_weight(num_embeddings: int, embedding_dim: int, devi
     weight = torch.empty((num_embeddings, embedding_dim), device=device, dtype=dtype)
     weight = nn.init.trunc_normal_(weight, 0, 1, -3.0, 3.0)
     return weight
+
+def get_module_memory_bytes(module: torch.nn.Module) -> int:
+    total_bytes = 0
+    for param in module.parameters():
+        total_bytes += param.numel() * param.element_size()
+    return total_bytes
