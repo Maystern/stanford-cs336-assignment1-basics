@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from einops import einsum, rearrange
+from einops import rearrange
 
 class RMSNorm(nn.Module):
     def __init__(self, d_model: int, eps: float = 1e-5, device: torch.device | None = None, dtype: torch.dtype | None = None):
@@ -9,13 +9,13 @@ class RMSNorm(nn.Module):
         self.eps = eps
         self.device = device
         self.dtype = dtype
-        self.gain_param = nn.Parameter(torch.ones((d_model), device=device, dtype=dtype), requires_grad=True)
+        self.weight = nn.Parameter(torch.ones((d_model), device=device, dtype=dtype), requires_grad=True)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         in_dtype = x.dtype
         x = x.to(torch.float32)
         rms = rearrange(torch.sqrt(torch.mean(x ** 2, dim=-1) + self.eps), "... -> ... 1")
-        g = rearrange(self.gain_param, "d_model -> 1 1 d_model")
+        g = rearrange(self.weight, "d_model -> 1 1 d_model")
         result = (x / rms) * g
         return result.to(in_dtype)
     

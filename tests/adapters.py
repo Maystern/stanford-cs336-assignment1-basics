@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from typing import IO, Any, BinaryIO
 from collections.abc import Iterable
-from jaxtyping import Float, Int
+from jaxtyping import Float, Int, Bool
 
 import numpy.typing as npt
 import torch
@@ -16,6 +16,8 @@ from cs336_basics.linear import Linear, Embedding, SwiGLU
 from cs336_basics.normalization import RMSNorm
 from cs336_basics.utils import softmax
 from cs336_basics.position_embed import RoPE
+from cs336_basics.attention import scaled_dot_product_attention, MultiheadSelfAttention, MultiheadSelfAttentionWithRoPE
+from cs336_basics.transformer import TransformerBlock, Transformer
 
 
 def run_linear(
@@ -97,9 +99,9 @@ def run_swiglu(
 
     SwiGLU_layer = SwiGLU(d_model, d_ff, DEVICE, w1_weight.dtype)
     SwiGLU_layer.load_state_dict({
-        "w1_weight": w1_weight,
-        "w2_weight": w2_weight,
-        "w3_weight": w3_weight,
+        "w1.weight": w1_weight,
+        "w2.weight": w2_weight,
+        "w3.weight": w3_weight,
     })
     return SwiGLU_layer(in_features)
 
@@ -108,7 +110,7 @@ def run_scaled_dot_product_attention(
     Q: Float[Tensor, " ... queries d_k"],
     K: Float[Tensor, " ... keys d_k"],
     V: Float[Tensor, " ... values d_v"],
-    mask: Float[Tensor, " ... queries keys"] | None = None,
+    mask: Bool[Tensor, " ... queries keys"] | None = None,
 ) -> Float[Tensor, " ... queries d_v"]:
     """
     Given key (K), query (Q), and value (V) tensors, return
@@ -122,7 +124,7 @@ def run_scaled_dot_product_attention(
     Returns:
         Float[Tensor, " ... queries d_v"]: Output of SDPA
     """
-    raise NotImplementedError
+    return scaled_dot_product_attention(Q, K, V, mask)
 
 
 def run_multihead_self_attention(
@@ -156,7 +158,14 @@ def run_multihead_self_attention(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    multihead_self_attention_layer = MultiheadSelfAttention(d_model, num_heads, DEVICE, q_proj_weight.dtype)
+    multihead_self_attention_layer.load_state_dict({
+        "q_proj.weight": q_proj_weight,
+        "k_proj.weight": k_proj_weight,
+        "v_proj.weight": v_proj_weight,
+        "output_proj.weight": o_proj_weight,
+    })
+    return multihead_self_attention_layer(in_features)
 
 
 def run_multihead_self_attention_with_rope(
@@ -196,7 +205,14 @@ def run_multihead_self_attention_with_rope(
         Float[Tensor, " ... sequence_length d_out"]: Tensor with the output of running your optimized, batched multi-headed attention
         implementation with the given QKV projection weights and input features.
     """
-    raise NotImplementedError
+    multihead_self_attention_with_rope_layer = MultiheadSelfAttentionWithRoPE(d_model, num_heads, theta, max_seq_len, DEVICE, q_proj_weight.dtype)
+    multihead_self_attention_with_rope_layer.load_state_dict({
+        "q_proj.weight": q_proj_weight,
+        "k_proj.weight": k_proj_weight,
+        "v_proj.weight": v_proj_weight,
+        "output_proj.weight": o_proj_weight,
+    })
+    return multihead_self_attention_with_rope_layer(in_features, token_positions)
 
 
 def run_rope(
@@ -292,7 +308,13 @@ def run_transformer_block(
         Float[Tensor, "batch sequence_length d_model"] Tensor with the output of
         running the Transformer block on the input features while using RoPE.
     """
-    raise NotImplementedError
+    dtype = None
+    for name, param in weights.items():
+        dtype = param.dtype
+        break
+    transformer_block = TransformerBlock(d_model, num_heads, d_ff, max_seq_len, theta, DEVICE, dtype)
+    transformer_block.load_state_dict(weights)
+    return transformer_block(in_features)
 
 
 def run_transformer_lm(
@@ -374,7 +396,13 @@ def run_transformer_lm(
         Float[Tensor, "batch_size sequence_length vocab_size"]: Tensor with the predicted unnormalized
         next-word distribution for each token.
     """
-    raise NotImplementedError
+    dtype = None
+    for name, param in weights.items():
+        dtype = param.dtype
+        break
+    transformer = Transformer(vocab_size, context_length, d_model, num_layers, num_heads, d_ff, rope_theta, DEVICE, dtype)
+    transformer.load_state_dict(weights)
+    return transformer(in_indices)
 
 
 def run_rmsnorm(
@@ -398,7 +426,7 @@ def run_rmsnorm(
         RMSNorm of the `in_features`.
     """
     rmsNorm_layer = RMSNorm(d_model, eps, DEVICE, weights.dtype)
-    rmsNorm_layer.load_state_dict({"gain_param": weights})
+    rmsNorm_layer.load_state_dict({"weight": weights})
     return rmsNorm_layer(in_features)
 
 
