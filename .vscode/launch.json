@@ -118,5 +118,50 @@
                 "PYTHONPATH": "${workspaceFolder}"
             }
         },
+        {
+            // uv run pytest -k test_cross_entropy
+            "name": "Cross Entropy - PyTest Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-k",
+                "test_cross_entropy",
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            // uv run pytest -k test_adamw
+            "name": "AdamW - PyTest Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-k",
+                "test_adamw",
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            // uv run pytest -k test_gradient_clipping
+            "name": "Gradient Clipping - PyTest Debugger",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-k",
+                "test_gradient_clipping",
+            ],
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        }
     ]
 }

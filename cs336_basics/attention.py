@@ -2,7 +2,7 @@ import torch
 import math
 from torch import nn
 from einops import einsum, rearrange
-from cs336_basics.utils import softmax, initial_torch_linear_weight
+from cs336_basics.utils import softmax
 from cs336_basics.position_embed import RoPE
 from cs336_basics.linear import Linear
 
