@@ -35,9 +35,13 @@ class SwiGLU(nn.Module):
         self.w3 = Linear(d_model, d_ff, device, dtype) # 参数大小 d_model * d_ff
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # flops: 2 * d_model * d_model * d_ff
-        p = SiLU(self.w1(x))
-        # flops: 2 * d_model * d_model * d_ff
+        """
+            输入 x 的 shape 为 [batch, seq_len, d_model]
+            总的举证乘法 FLOPs 为 6 * context_length * d_model * d_ff
+        """
+        # flops: 2 * context_length * d_model * d_ff
+        p = SiLU(self.w1(x)) # shape: [batch, seq_len, d_model] -> [batch, seq_len, d_ff]
+        # flops: 2 * context_length * d_model * d_ff
         q = self.w3(x)
-        # flops: 2 * d_ff * d_Ff * d_model
+        # flops: 2 * context_length * d_ff * d_model
         return self.w2(p * q)

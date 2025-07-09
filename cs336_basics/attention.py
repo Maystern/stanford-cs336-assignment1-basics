@@ -8,14 +8,24 @@ from cs336_basics.linear import Linear
 
 def scaled_dot_product_attention(Q, K, V: torch.Tensor, mask: torch.Tensor = None):
     """
-        flops: 4 * context_length * context_length * d_model
+        输入变量的 shape:
+            [1] Q: [batch, num_heads, seq_len, d_model // num_heads]
+            [2] K: [batch, num_heads, seq_len, d_model // num_heads]
+            [3] V: [batch, num_heads, seq_len, d_model // num_heads]
+            [3] mask: [seq_len, seq_len]
+        需要的总矩阵乘法 FLOPs 为 4 * d_model * context_length * context_length
     """
     d_k = K.shape[-1]
-    attn_scores = einsum(Q, K, "... q d_k, ... k d_k -> ... q k")
+    # 计算 attn 分数, 需要的矩阵乘法 FLOPs 为 2 * (batch * num_heads) * seq_len * d_model // num_heads * seq_len
+    # 等于 2 * d_model * context_length * context_length
+    attn_scores = einsum(Q, K, "... q d_k, ... k d_k -> ... q k") # shape 为 [batch, num_heads, seq_len, seq_len]
     attn_scores /= math.sqrt(d_k)
     if mask is not None:
         attn_scores = attn_scores.masked_fill(mask == False, float("-inf"))
     attn_weights = softmax(attn_scores, dim=-1)
+    
+    # 需要的 FLOPs: 2 * batch * num_heads * seq_len * seq_len * d_model // num_heads
+    # 等于 2 * d_model * context_length * context_length 
     return einsum(attn_weights, V, "... q k, ... k d_v -> ... q d_v")
 
 class MultiheadSelfAttention(nn.Module):
@@ -47,7 +57,8 @@ class MultiheadSelfAttention(nn.Module):
 class MultiheadSelfAttentionWithRoPE(nn.Module):
     """
         总的参数大小 4 * d_model * d_model
-        总的矩阵乘法 flops = 6 * d_model * d_model * d_model + 4 * context_length * context_length * d_model + 2 * context_length * d_model * d_model
+        总的矩阵乘法 flops 构成：
+
     """
     def __init__(self, d_model: int, num_heads: int, theta: float, max_seq_len: int, device: torch.device | None = None, dtype: torch.dtype | None = None):
         super().__init__()
@@ -63,24 +74,36 @@ class MultiheadSelfAttentionWithRoPE(nn.Module):
         self.RoPE_layer = RoPE(theta, d_model // num_heads, max_seq_len, device)
 
     def forward(self, x: torch.Tensor, token_positions: torch.Tensor):
+        """
+            输入的 x 的形状为 [batch, seq_len, d_model]
+            总矩阵乘法 FLOPs 的构成:
+                [1] Q's proj: 2 * context_length * d_model * d_model
+                [2] K's proj: 2 * context_length * d_model * d_model
+                [3] V's proj: 2 * context_length * d_model * d_model
+                [4] scaled_dot_product_attention: 4 * d_model * context_length * context_length
+                [5] O's proj: 2 * context_length * d_model * d_model
+                total: 8 * context_length * d_model * d_model + 4 * d_model * context_length * context_length
+        """
         seq_len = x.shape[-2]
         
-        # flops: 2 * d_model * d_model * d_model
-        Q = rearrange(self.q_proj(x), "... seq_len (h d_k) -> ... h seq_len d_k", h = self.num_heads)
+        # flops: 2 * (batch * seq_len)  * d_model * d_model = 2 * context_length * d_model * d_model
+        Q = rearrange(self.q_proj(x), "... seq_len (h d_k) -> ... h seq_len d_k", h = self.num_heads) # shape: [batch, seq_len, d_model] -> [batch, num_heads, seq_len, d_model // num_heads]
+        # flops: 4 * context_length * d_model 可以忽略不计
         Q = self.RoPE_layer(Q, token_positions)
 
-        # flops: 2 * d_model * d_model * d_model
+        # flops: 2 * context_length * d_model * d_model
         K = rearrange(self.k_proj(x), "... seq_len (h d_k) -> ... h seq_len d_k", h = self.num_heads)
+        # flops: 4 * context_length * d_model 可以忽略不计
         K = self.RoPE_layer(K, token_positions)
 
-        # flops: 2 * d_model * d_model * d_model
+        # flops: 2 * context_length * d_model * d_model
         V = rearrange(self.v_proj(x), "... seq_len (h d_v) -> ... h seq_len d_v", h = self.num_heads)
 
-        mask = torch.tril(torch.ones(seq_len, seq_len)).bool()
+        mask = torch.tril(torch.ones(seq_len, seq_len)).bool() # shape 为 [seq_len, seq_len]
 
-        # flops: 4 * context_length * context_length * d_model
+        # flops: 4 * d_model * context_length * context_length
         attn = scaled_dot_product_attention(Q, K, V, mask)
-        attn = rearrange(attn, "... h seq_len d_v -> ... seq_len (h d_v)", h = self.num_heads)
+        attn = rearrange(attn, "... h seq_len d_v -> ... seq_len (h d_v)", h = self.num_heads) # shape: [batch, num_heads, seq_len, d_model // num_heads] -> [batch, seq_len, d_model]
         
         # flops: 2 * context_length * d_model * d_model
         return self.output_proj(attn)
