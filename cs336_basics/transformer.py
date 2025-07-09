@@ -227,4 +227,3 @@ if __name__ == "__main__":
     print(f"手动计算内存 {transformer.param_count() * 4 / (1024 * 1024):.4f} MB")
     print(f"实际占用内存: {get_module_memory_bytes(transformer) / (1024 * 1024):.4f} MB")
     print(f"模型推理总乘法FLOPs: {transformer.mul_flops():.4f} GFLOPs")
-
