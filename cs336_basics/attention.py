@@ -47,7 +47,7 @@ class MultiheadSelfAttention(nn.Module):
         K = rearrange(self.k_proj(x), "... seq_len (h d_k) -> ... h seq_len d_k", h = self.num_heads)
         V = rearrange(self.v_proj(x), "... seq_len (h d_v) -> ... h seq_len d_v", h = self.num_heads)
 
-        mask = torch.tril(torch.ones(seq_len, seq_len)).bool()
+        mask = torch.tril(torch.ones(seq_len, seq_len)).bool().to(x.device)
         
         attn = scaled_dot_product_attention(Q, K, V, mask)
         attn = rearrange(attn, "... h seq_len d_v -> ... seq_len (h d_v)", h = self.num_heads)
@@ -66,10 +66,10 @@ class MultiheadSelfAttentionWithRoPE(nn.Module):
         self.d_model = d_model
         self.num_heads = num_heads
 
-        self.q_proj = Linear(d_model, d_model) # 参数大小：d_model * d_model
-        self.k_proj = Linear(d_model, d_model) # 参数大小：d_model * d_model
-        self.v_proj = Linear(d_model, d_model) # 参数大小：d_model * d_model
-        self.output_proj = Linear(d_model, d_model) # 参数大小：d_model * d_model
+        self.q_proj = Linear(d_model, d_model, device, dtype) # 参数大小：d_model * d_model
+        self.k_proj = Linear(d_model, d_model, device, dtype) # 参数大小：d_model * d_model
+        self.v_proj = Linear(d_model, d_model, device, dtype) # 参数大小：d_model * d_model
+        self.output_proj = Linear(d_model, d_model, device, dtype) # 参数大小：d_model * d_model
 
         self.RoPE_layer = RoPE(theta, d_model // num_heads, max_seq_len, device)
 
@@ -99,7 +99,7 @@ class MultiheadSelfAttentionWithRoPE(nn.Module):
         # flops: 2 * context_length * d_model * d_model
         V = rearrange(self.v_proj(x), "... seq_len (h d_v) -> ... h seq_len d_v", h = self.num_heads)
 
-        mask = torch.tril(torch.ones(seq_len, seq_len)).bool() # shape 为 [seq_len, seq_len]
+        mask = torch.tril(torch.ones(seq_len, seq_len)).bool().to(x.device) # shape 为 [seq_len, seq_len]
 
         # flops: 4 * d_model * context_length * context_length
         attn = scaled_dot_product_attention(Q, K, V, mask)

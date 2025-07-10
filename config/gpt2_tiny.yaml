@@ -1,0 +1,8 @@
+vocab_size: 1000
+context_length: 100
+d_model: 384
+d_ff: 682
+num_layers: 12
+num_heads: 12
+rope_theta: 10000
+device: "mps"

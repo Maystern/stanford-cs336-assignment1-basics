@@ -14,11 +14,13 @@ from cs336_basics.train_bpe import train_bpe
 from cs336_basics.tokenizer import Tokenizer
 from cs336_basics.linear import Linear, Embedding, SwiGLU
 from cs336_basics.normalization import RMSNorm
-from cs336_basics.utils import softmax, cross_entropy, cosine_annealing_lr_schedule, gradient_clipping
+from cs336_basics.utils import softmax, cross_entropy, cosine_annealing_lr_schedule, gradient_clipping, SiLU
 from cs336_basics.position_embed import RoPE
 from cs336_basics.attention import scaled_dot_product_attention, MultiheadSelfAttention, MultiheadSelfAttentionWithRoPE
 from cs336_basics.transformer import TransformerBlock, Transformer
 from cs336_basics.optimizer import AdamW
+from cs336_basics.data_loader import data_loading
+from cs336_basics.checkpoint import load_checkpoint, save_checkpoint
 
 
 def run_linear(
@@ -442,7 +444,7 @@ def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
         Float[Tensor,"..."]: of with the same shape as `in_features` with the output of applying
         SiLU to each element.
     """
-    raise NotImplementedError
+    return SiLU(in_features)
 
 
 def run_get_batch(
@@ -465,7 +467,8 @@ def run_get_batch(
         is the sampled input sequences, and the second tuple item is the corresponding
         language modeling labels.
     """
-    raise NotImplementedError
+    return data_loading(dataset, batch_size, context_length,  device)
+    # raise NotImplementedError
 
 
 def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, " ..."]:
@@ -562,7 +565,7 @@ def run_save_checkpoint(
             we've completed.
         out (str | os.PathLike | BinaryIO | IO[bytes]): Path or file-like object to serialize the model, optimizer, and iteration to.
     """
-    raise NotImplementedError
+    save_checkpoint(model, optimizer, iteration, out)
 
 
 def run_load_checkpoint(
@@ -583,7 +586,7 @@ def run_load_checkpoint(
     Returns:
         int: the previously-serialized number of iterations.
     """
-    raise NotImplementedError
+    return load_checkpoint(src, model, optimizer)
 
 
 def get_tokenizer(
@@ -637,4 +640,3 @@ def run_train_bpe(
                 Merges are ordered by order of creation.
     """
     return train_bpe(input_path, vocab_size, special_tokens)
-    # raise NotImplementedError

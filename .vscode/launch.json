@@ -5,7 +5,7 @@
             "name": "current file - Main Debugger",
             "type": "debugpy",
             "request": "launch",
-            "program": "cs336_basics/position_embed.py",
+            "program": "main.py",
             "args": [],
             "console": "integratedTerminal"
         },
@@ -162,6 +162,6 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
-        }
+        }, 
     ]
 }

@@ -172,3 +172,10 @@ sol.out
 profile_results.prof
 profile_results.prof
 owt_valid.txt.gz
+wandb/run-20250710_225115-vs736cc4/run-vs736cc4.wandb
+.gitignore
+wandb/run-20250710_225115-vs736cc4/files/wandb-metadata.json
+.gitignore
+wandb/latest-run
+wandb/run-20250710_225115-vs736cc4/files/config.yaml
+wandb/run-20250710_225115-vs736cc4/files/wandb-summary.json

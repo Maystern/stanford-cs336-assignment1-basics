@@ -35,8 +35,8 @@ class TransformerBlock(nn.Module):
         """
             输入 x 的 shape 为 [batch, seq_len, d_model]
         """
-        x += self.attn(self.ln1(x), torch.arange(x.shape[-2]))
-        x += self.ffn(self.ln2(x))
+        x = x + self.attn(self.ln1(x), torch.arange(x.shape[-2]).to(x.device))
+        x = x + self.ffn(self.ln2(x))
         return x
 
 class Transformer(nn.Module):

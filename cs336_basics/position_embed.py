@@ -14,8 +14,8 @@ class RoPE(nn.Module):
         """
             输入的 x 的 shape 为 [batch, num_heads, seq_len, d_model // num_heads]
         """
-        cos_theta = self.cos_table[token_positions]
-        sin_theta = self.sin_table[token_positions]
+        cos_theta = self.cos_table.to(x.device)[token_positions]
+        sin_theta = self.sin_table.to(x.device)[token_positions]
 
         # 二维向量旋转：https://github.com/berwin/Blog/issues/57
         rot_matrix = torch.stack([

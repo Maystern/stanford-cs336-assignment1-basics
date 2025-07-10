@@ -45,6 +45,9 @@ def cosine_annealing_lr_schedule(t: int, alpha_max, alpha_min: float, Tw, Tc: in
     else: 
         return alpha_min
 
+def costant_lr_schedule(t: int, lr: float):
+    return lr
+
 def gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float, eps: float = 1e-6):
     l2_norm_sum = None
     for p in parameters:
