@@ -7,3 +7,13 @@ dataset_vocab_merges_cache_dir: "./cache/"
 special_tokens: ["<|endoftext|>"]
 num_epoch: 1000
 batch_size: 16
+lr_schedule:
+  type: "cosine_annealing"
+  params:
+    alpha_max: 1e-3
+    alpha_min: 1e-5
+    Tw: 100
+    Tc: 900
+  # type: "constant"
+  # params:
+  #   lr: 1e-3

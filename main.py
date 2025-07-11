@@ -10,12 +10,13 @@ from tqdm import tqdm
 from typing import List
 from einops import rearrange
 from cs336_basics.transformer import Transformer
-from cs336_basics.utils import get_module_memory_bytes, cross_entropy, cosine_annealing_lr_schedule
+from cs336_basics.utils import get_module_memory_bytes, cross_entropy
 from cs336_basics.optimizer import AdamW
 from cs336_basics.train_bpe import train_bpe, split_by_special_tokens
 from cs336_basics.tokenizer import Tokenizer
 from cs336_basics.pretokenization import find_chunk_boundaries, find_all_regex
 from cs336_basics.data_loader import data_loading
+from cs336_basics.scheduler import CostantLRScheduler, CosineAnnealingLRScheduler
 
 def init_pool(lock):
     global tqdm_lock
@@ -29,7 +30,11 @@ def tokenization(args) -> List[int]:
 
 if __name__ == "__main__":
 
-    wandb.init(project='cs336_assignment1_jiacheng', entity='jiacheng-luo')
+    wandb.init(
+        project='cs336_assignment1_jiacheng',
+        entity='jiacheng-luo',
+        name="cosine_annealing_lr_schedule",
+    )
 
     model_config_path = "./config/gpt2_tiny.yaml"
     # model_config_path = "./config/gpt2_xl.yaml"
@@ -64,12 +69,31 @@ if __name__ == "__main__":
         except yaml.YAMLError as exc:
             print(f"模型配置解析错误 {exc}")
     
+    lr_schedule = CostantLRScheduler(lr=float(train_config["lr"]))
+    
+    try:
+        lr_schedule_config = train_config["lr_schedule"]
+        if lr_schedule_config["type"] == "costant":
+            lr_schedule = CostantLRScheduler(float(lr_schedule_config["params"]["lr"]))
+        elif lr_schedule_config["type"] == "cosine_annealing":
+            params = lr_schedule_config["params"]
+            lr_schedule = CosineAnnealingLRScheduler(
+                alpha_max=float(params["alpha_max"]),
+                alpha_min=float(params["alpha_min"]),
+                Tw=int(params["Tw"]),
+                Tc=int(params["Tc"])
+            )
+    except Exception as e:
+        print(f"""学习率配置读取失败, 采用恒定学习率, lr = {float(train_config["lr"])}""")
+
     optim = AdamW(
         params=model.parameters(),
         lr = float(train_config["lr"]),
         weight_decay=float(train_config["weight_decay"]),
         betas=train_config["betas"],
-        eps=float(train_config["eps"])
+        eps=float(train_config["eps"]),
+        lr_schedule=lr_schedule,
+        disabled_wandb_log=False
     )
 
     dataset_path = train_config["dataset_path"]
@@ -139,7 +163,7 @@ if __name__ == "__main__":
     
     del encode_list
 
-    for t in range(train_config["num_epoch"]):
+    for t in tqdm(range(train_config["num_epoch"])):
         X, targets = data_loading(
             encode_mmap_array,
             train_config["batch_size"],
@@ -151,9 +175,8 @@ if __name__ == "__main__":
         out = rearrange(out, "batch seq_len vocab_size -> (batch seq_len) vocab_size")
         targets = rearrange(targets, "batch seq_len -> (batch seq_len)")
         loss = cross_entropy(out, targets)
-        print(f"epoch{t}, loss = {loss.detach().float()}")
         wandb.log({
             "Test Loss": loss.detach().float()
-        })
+        }, step=t)
         loss.backward()
         optim.step()

@@ -1,26 +1,27 @@
 from __future__ import annotations
 
 import os
+import numpy.typing as npt
+import torch
+import wandb
+
 from typing import IO, Any, BinaryIO
 from collections.abc import Iterable
 from jaxtyping import Float, Int, Bool
-
-import numpy.typing as npt
-import torch
 from torch import Tensor
-
-from cs336_basics.consts import PAT, DEVICE
+from cs336_basics.consts import DEVICE
 from cs336_basics.train_bpe import train_bpe
 from cs336_basics.tokenizer import Tokenizer
 from cs336_basics.linear import Linear, Embedding, SwiGLU
 from cs336_basics.normalization import RMSNorm
-from cs336_basics.utils import softmax, cross_entropy, cosine_annealing_lr_schedule, gradient_clipping, SiLU
+from cs336_basics.utils import softmax, cross_entropy, gradient_clipping, SiLU
 from cs336_basics.position_embed import RoPE
 from cs336_basics.attention import scaled_dot_product_attention, MultiheadSelfAttention, MultiheadSelfAttentionWithRoPE
 from cs336_basics.transformer import TransformerBlock, Transformer
 from cs336_basics.optimizer import AdamW
 from cs336_basics.data_loader import data_loading
 from cs336_basics.checkpoint import load_checkpoint, save_checkpoint
+from cs336_basics.scheduler import CosineAnnealingLRScheduler
 
 
 def run_linear(
@@ -519,6 +520,7 @@ def get_adamw_cls() -> type[torch.optim.Optimizer]:
     """
     Returns a torch.optim.Optimizer that implements AdamW.
     """
+    
     return AdamW
 
 def run_get_lr_cosine_schedule(
@@ -546,7 +548,8 @@ def run_get_lr_cosine_schedule(
     Returns:
         Learning rate at the given iteration under the specified schedule.
     """
-    return cosine_annealing_lr_schedule(it, max_learning_rate, min_learning_rate, warmup_iters, cosine_cycle_iters)
+    cosine_annealing_lr_scheduler = CosineAnnealingLRScheduler(max_learning_rate, min_learning_rate, warmup_iters, cosine_cycle_iters)
+    return cosine_annealing_lr_scheduler(it)
 
 
 def run_save_checkpoint(

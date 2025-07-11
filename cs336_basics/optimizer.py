@@ -1,8 +1,11 @@
 import torch
 import math
+import wandb
 
 from typing import Optional, Tuple
 from collections.abc import Callable
+from cs336_basics.scheduler import CostantLRScheduler
+
 
 class SGD(torch.optim.Optimizer):
     def __init__(self, params, lr = 1e-3):
@@ -26,13 +29,17 @@ class SGD(torch.optim.Optimizer):
         return loss
 
 class AdamW(torch.optim.Optimizer):
-
-    def __init__(self, params, lr: float, weight_decay: float, betas: Tuple[float, float] = (0.9, 0.999), eps: float = 1e-8):
+    def __init__(self, params, lr: float, weight_decay: float, betas: Tuple[float, float] = (0.9, 0.999), eps: float = 1e-8, lr_schedule: Callable[[int], float] = None, disabled_wandb_log: bool = True):
+        if lr_schedule is None:
+            lr_schedule = CostantLRScheduler(lr)
+        self.disabled_wandb_log = disabled_wandb_log
+        self.lr_schedule = lr_schedule
         defaults = {"lr": lr, "weight_decay": weight_decay, "beta": betas, "eps": eps}
         super().__init__(params, defaults)
     
     def step(self, closure: Optional[Callable] = None):
         loss = None if closure is None else closure()
+        current_step = 0
         for group in self.param_groups:
             lr, weight_decay, beta, eps = group["lr"], group["weight_decay"], group["beta"], group["eps"]
             beta1, beta2 = beta
@@ -42,6 +49,13 @@ class AdamW(torch.optim.Optimizer):
                 state = self.state[p]
                 g = p.grad.data
                 t = state.get("t", 1)
+                lr = self.lr_schedule(t)
+                if not self.disabled_wandb_log:
+                    if current_step < t:
+                        wandb.log(data={
+                            "lr": lr
+                        }, step=t-1)
+                        current_step = t
                 m = state.get("m", torch.zeros_like(p.grad))
                 v = state.get("v", torch.zeros_like(p.grad))
                 m = beta1 * m + (1 - beta1) * g

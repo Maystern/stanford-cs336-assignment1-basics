@@ -5,12 +5,12 @@ import typing
 from torch import nn
 
 def save_checkpoint(model: nn.Module, optimizer: torch.optim.Optimizer, iteration: int, out: str | os.PathLike | typing.BinaryIO | typing.IO[bytes]):
-    weights = {
+    checkpoint = {
         "model_weights": model.state_dict(),
         "optim_states": optimizer.state_dict(),
         "iteration": iteration
     }
-    torch.save(weights, out)
+    torch.save(checkpoint, out)
 
 def load_checkpoint(src: str | os.PathLike | typing.BinaryIO | typing.IO[bytes], model: torch.nn.Module, optimizer: torch.optim.Optimizer):
     weights = torch.load(src)
