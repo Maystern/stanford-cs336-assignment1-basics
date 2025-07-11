@@ -1,11 +1,12 @@
 import torch
 
 from torch import nn
-
+from typing import List
+from einops import rearrange
 from cs336_basics.normalization import RMSNorm
 from cs336_basics.attention import MultiheadSelfAttentionWithRoPE
 from cs336_basics.linear import SwiGLU, Embedding, Linear
-from cs336_basics.utils import get_module_memory_bytes
+from cs336_basics.utils import get_module_memory_bytes, softmax
 
 class TransformerBlock(nn.Module):
     """
@@ -115,6 +116,32 @@ class TransformerInfoCalc(nn.Module):
         total_flops = attn_flops + ffn_flops + lm_head_flops
         print(f"attn_flops: {attn_flops:.4f} GFLOPs ({attn_flops / total_flops * 100.0:.2f}%)\t ffn_flops: {ffn_flops:.4f} GFLOPs({ffn_flops / total_flops * 100.0:.2f}%)\t lm_head_flops: {lm_head_flops:.4f} GFLOPs ({lm_head_flops / total_flops * 100.0:.2f}%)")
         return total_flops
+
+
+def decoding(model: Transformer, x: List[int], max_token_num: int, encoded_special_token_list: List[int], temperature: float, p: float, device: torch.device = torch.device("cpu")) -> List[int]:
+    """
+        x: [seq_len] -> [token_num]
+    """
+    model = model.to(device)
+    results = []
+    encoded_special_token_set = set(encoded_special_token_list)
+    while len(results) < max_token_num and len(x) + len(results) <= model.context_length:
+        input = rearrange(torch.tensor(x + results, device=device), "seq_len -> 1 seq_len")
+        probs = rearrange(model(input)[:,-1,:], "1 seq_len -> seq_len")
+        probs = softmax(probs / temperature, dim=-1)
+        sorted_indices = torch.argsort(probs, descending=True)
+        sorted_probs = probs[sorted_indices]
+        cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
+        cutoff = torch.searchsorted(cumulative_probs, p, side="right") + 1
+        sample_indices = sorted_indices[: cutoff]
+        sample_probs = sorted_probs[: cutoff]
+        sample_probs = sample_probs / torch.sum(sample_probs)
+        sampled_index = torch.multinomial(sample_probs, num_samples=1).item()
+        next_token = sample_indices[sampled_index].item()
+        results.append(next_token)
+        if next_token in encoded_special_token_set:
+            break
+    return results
 
 if __name__ == "__main__":
     """

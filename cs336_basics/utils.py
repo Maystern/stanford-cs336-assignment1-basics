@@ -1,9 +1,10 @@
 import torch
 import math
+import random
 
 from torch import nn
-from einops import einsum, rearrange
-from typing import Iterable
+from typing import Iterable, List
+from einops import rearrange
 
 def SiLU(x: torch.Tensor):
     return x * torch.sigmoid(x)
@@ -37,7 +38,7 @@ def cross_entropy(input, target: torch.Tensor) -> torch.Tensor:
     r = -(input[torch.arange(input.shape[0]), target] - div)
     return torch.mean(r)
 
-def gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float, eps: float = 1e-6):
+def gradient_lr_norm_sum_calc(parameters: Iterable[torch.nn.Parameter]):
     l2_norm_sum = None
     for p in parameters:
         if p.grad is None:
@@ -47,14 +48,14 @@ def gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: flo
             l2_norm_sum = l2_norm
         else:
             l2_norm_sum += l2_norm
+    return l2_norm_sum
 
+def gradient_clipping(parameters: Iterable[torch.nn.Parameter], max_l2_norm: float, eps: float = 1e-6):
+    l2_norm_sum = gradient_lr_norm_sum_calc(parameters)
     if l2_norm_sum is None: return
-
     l2_norm_sum = torch.sqrt(l2_norm_sum)
-
     if l2_norm_sum < max_l2_norm:
         return
-    
     scale_factor = max_l2_norm / (l2_norm_sum + eps)
     for p in parameters:
         if p.grad is None:

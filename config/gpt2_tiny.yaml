@@ -1,3 +1,4 @@
+name: "gpt2_tiny"
 vocab_size: 1000
 context_length: 100
 d_model: 384

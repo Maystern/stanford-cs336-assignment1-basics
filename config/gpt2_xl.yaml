@@ -1,3 +1,4 @@
+name: "gpt2_xl"
 vocab_size: 50257
 context_length: 1024
 d_model: 1600
@@ -5,4 +6,4 @@ d_ff: 6400
 num_layers: 48
 num_heads: 25
 rope_theta: 100000
-device: "cpu"
+device: "mps"
