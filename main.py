@@ -1,18 +1,10 @@
-import os
-import multiprocessing as mp
-import numpy as np
 import wandb
 import argparse
 import torch
 
 from tqdm import tqdm
-from typing import List
 from einops import rearrange
-from cs336_basics.transformer import Transformer
 from cs336_basics.utils import get_module_memory_bytes, cross_entropy, gradient_lr_norm_sum_calc, get_module_param_count
-from cs336_basics.optimizer import AdamW
-from cs336_basics.train_bpe import train_bpe
-from cs336_basics.tokenizer import Tokenizer
 
 from cs336_basics.data_loader import data_loading, dataset_loading
 from cs336_basics.checkpoint import save_checkpoint
@@ -32,9 +24,6 @@ if __name__ == "__main__":
         entity='jiacheng-luo',
     )
 
-    # model_config_path = "./config/gpt2_tiny.yaml"
-    # model_config_path = "./config/gpt2_xl.yaml"
-    # model_config_path = "./config/gpt2_small.yaml"
     model_config_path = args.model
     model_config = get_model_config(model_config_path)
     try:
@@ -45,7 +34,6 @@ if __name__ == "__main__":
     print(f"实际可训练参数: {get_module_param_count(model) / (1000 * 1000):.4f} M")
     print(f"实际占用内存: {get_module_memory_bytes(model) / (1024 * 1024):.4f} MB")
 
-    # train_config_path = "./config/train.yaml"
     train_config_path = args.train
     train_config = get_train_config(train_config_path)
     
@@ -106,4 +94,4 @@ if __name__ == "__main__":
             wandb.log({
                 "Validation Loss": loss.detach().float()
             }, step=t)
-    save_checkpoint(model, optim, t, f"{model_saved_path}_checkpoint_{t}.pt")
+    save_checkpoint(model, optim, t, f"""{model_saved_path}_checkpoint_{t}_lr_{train_config["lr"]}.pt""")

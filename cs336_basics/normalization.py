@@ -20,9 +20,3 @@ class RMSNorm(nn.Module):
         rms = rearrange(torch.sqrt(torch.mean(x ** 2, dim=-1) + self.eps), "... -> ... 1") # 形状为 [batch, seq_len, d_model]
         result = (x / rms) * self.weight # [batch, seq_len, d_model] * [d_model] 需要进行广播，这里的乘法是按元素乘法，并不是矩阵乘法，计算量为 batch * seq_len * d_model (可以忽略不计)
         return result.to(in_dtype)
-    
-if __name__ == "__main__":
-    rmsNorm = RMSNorm(512, 1e-5, torch.device("cpu"), torch.float16)
-    x = torch.rand((32, 100, 512), dtype=torch.float16)
-    y = rmsNorm(x)
-    print(y.shape)

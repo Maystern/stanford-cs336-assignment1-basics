@@ -1,10 +1,8 @@
 import torch
 import math
-import random
 
 from torch import nn
-from typing import Iterable, List
-from einops import rearrange
+from typing import Iterable
 
 def SiLU(x: torch.Tensor):
     return x * torch.sigmoid(x)

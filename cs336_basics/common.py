@@ -8,7 +8,7 @@ from torch import nn
 from typing import Dict
 from cs336_basics.optimizer import AdamW
 from cs336_basics.scheduler import CostantLRScheduler, CosineAnnealingLRScheduler
-from cs336_basics.transformer import Transformer, TransformerInfoCalc
+from cs336_basics.transformer import Transformer
 from cs336_basics.train_bpe import train_bpe
 from cs336_basics.tokenizer import Tokenizer
 

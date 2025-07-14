@@ -1,5 +1,4 @@
 import torch
-import math
 
 from torch import nn
 from einops import einsum
