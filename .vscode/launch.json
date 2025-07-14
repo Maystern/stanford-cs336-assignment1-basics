@@ -163,5 +163,19 @@
                 "PYTHONPATH": "${workspaceFolder}"
             }
         }, 
+        {
+            "name": "Debug Main Script",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "main.py",
+            "args": [
+                "-t", "./config/train.yaml",
+                "-m", "./config/gpt2_tiny.yaml"
+            ],
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            },
+            "justMyCode": false
+        }
     ]
 }

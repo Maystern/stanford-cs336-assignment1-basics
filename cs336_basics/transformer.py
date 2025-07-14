@@ -100,10 +100,12 @@ class TransformerInfoCalc(nn.Module):
         self.context_length = context_length
     
     def forward(self, x: torch.Tensor):
-        pass
+        raise RuntimeError("TransformerInfoCalc 类只做参数计算, 不能调用 forward 方法")
     
     def param_count(self) -> int:
-        return 2 * self.vocab_size * self.d_model + 4 * self.num_layers * self.d_model * self.d_model + 3 * self.num_layers * self.d_model * self.d_ff + (2 * self.num_layers + 1) * self.d_model
+        embedding_params = 1 * self.vocab_size * self.d_model
+        non_embedding_params = 4 * self.num_layers * self.d_model * self.d_model + 3 * self.num_layers * self.d_model * self.d_ff + (2 * self.num_layers + 1) * self.d_model + self.vocab_size * self.d_model
+        return embedding_params + non_embedding_params
     
     def mul_flops(self) -> int:
         attn_flops = self.num_layers * 8 * self.context_length * self.d_model * self.d_model + 4 * self.d_model * self.context_length * self.context_length

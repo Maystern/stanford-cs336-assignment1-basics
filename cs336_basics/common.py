@@ -8,7 +8,7 @@ from torch import nn
 from typing import Dict
 from cs336_basics.optimizer import AdamW
 from cs336_basics.scheduler import CostantLRScheduler, CosineAnnealingLRScheduler
-from cs336_basics.transformer import Transformer
+from cs336_basics.transformer import Transformer, TransformerInfoCalc
 from cs336_basics.train_bpe import train_bpe
 from cs336_basics.tokenizer import Tokenizer
 
@@ -38,6 +38,7 @@ def determined_optimizer(model: nn.Module, train_config: Dict):
         betas=train_config["betas"],
         eps=float(train_config["eps"]),
         lr_schedule=determined_lr_schedule(train_config),
+        gradient_clipping=train_config["gradient_clipping"],
         disabled_wandb_log=False
     )
 
@@ -58,7 +59,8 @@ def get_model_config(model_config_path: str):
             sys.exit(1)
 
 def construct_model(model_config: Dict):
-    return Transformer(
+    device = model_config["device"]
+    model = Transformer(
             vocab_size=model_config["vocab_size"],
             context_length=model_config["context_length"],
             d_model=model_config["d_model"],
@@ -66,14 +68,19 @@ def construct_model(model_config: Dict):
             num_heads=model_config["num_heads"],
             d_ff=model_config["d_ff"],
             rope_theta=model_config["rope_theta"],
-            device=torch.device(model_config["device"]),
+            device=torch.device(device),
             dtype=torch.float32
         )
+    if device == "cpu":
+        model = torch.compile(model)
+    elif device == "mps":
+        model = torch.compile(model, backend="aot_eager")
+    return model
 
-def construct_tokenizer(train_config: Dict, model_config: Dict):
+def construct_tokenizer(train_config: Dict, model_config: Dict) -> Tokenizer:
 
-    dataset_path = train_config["dataset_path"]
-    store_path_cache_base = train_config["dataset_vocab_merges_cache_dir"]
+    dataset_path = train_config["train_dataset_path"]
+    store_path_cache_base = train_config["cache_dir"]
     dataset_name = store_path_cache_base + dataset_path.split("/")[-1].split(".")[0]
     
     

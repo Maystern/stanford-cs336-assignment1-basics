@@ -196,7 +196,7 @@ def train_bpe (
     
     merge_list = []
 
-    for _ in tqdm(range(num_epoches), desc="Training"):
+    for _ in tqdm(range(num_epoches), desc="Training BPE"):
         # 找到出现最大次数的 adj_token, 次数一致的情况下选择字典序最大的
         max_adj_token = None
         max_count = 0

@@ -2,9 +2,10 @@ import torch
 import math
 import wandb
 
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 from collections.abc import Callable
 from cs336_basics.scheduler import CostantLRScheduler
+from cs336_basics.utils import gradient_clipping
 
 
 class SGD(torch.optim.Optimizer):
@@ -29,11 +30,20 @@ class SGD(torch.optim.Optimizer):
         return loss
 
 class AdamW(torch.optim.Optimizer):
-    def __init__(self, params, lr: float, weight_decay: float, betas: Tuple[float, float] = (0.9, 0.999), eps: float = 1e-8, lr_schedule: Callable[[int], float] = None, disabled_wandb_log: bool = True):
+    def __init__(self, 
+            params, lr: float, 
+            weight_decay: float, 
+            betas: Tuple[float, float] = (0.9, 0.999), 
+            eps: float = 1e-8, 
+            lr_schedule: Callable[[int], float] = None,
+            gradient_clipping: Dict = {"enable": False, "max_l2_norm": None},
+            disabled_wandb_log: bool = True
+        ):
         if lr_schedule is None:
             lr_schedule = CostantLRScheduler(lr)
         self.disabled_wandb_log = disabled_wandb_log
         self.lr_schedule = lr_schedule
+        self.gradient_clipping = gradient_clipping
         defaults = {"lr": lr, "weight_decay": weight_decay, "beta": betas, "eps": eps}
         super().__init__(params, defaults)
     
@@ -43,6 +53,8 @@ class AdamW(torch.optim.Optimizer):
         for group in self.param_groups:
             lr, weight_decay, beta, eps = group["lr"], group["weight_decay"], group["beta"], group["eps"]
             beta1, beta2 = beta
+            if self.gradient_clipping is not None and self.gradient_clipping["enable"]:
+                gradient_clipping(group["params"], float(self.gradient_clipping["max_l2_norm"]))
             for p in group["params"]:
                 if p.grad is None:
                     continue

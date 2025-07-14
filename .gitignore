@@ -178,3 +178,5 @@ wandb/run-20250710_225115-vs736cc4/files/wandb-metadata.json
 .gitignore
 wandb/
 *.pt
+*.dat
+encoded_tokens.dat

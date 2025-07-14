@@ -32,6 +32,12 @@ def get_module_memory_bytes(module: torch.nn.Module) -> int:
         total_bytes += param.numel() * param.element_size()
     return total_bytes
 
+def get_module_param_count(module: torch.nn.Module) -> int:
+    total_count = 0
+    for param in module.parameters():
+        total_count += param.numel()
+    return total_count
+
 def cross_entropy(input, target: torch.Tensor) -> torch.Tensor:
     max_value, _ = input.max(dim=-1, keepdim=True)
     div = max_value + torch.log(torch.sum(torch.exp(input - max_value), dim=-1))
