@@ -21,7 +21,7 @@ def determined_lr_schedule(train_config: Dict):
         elif lr_schedule_config["type"] == "cosine_annealing":
             params = lr_schedule_config["params"]
             lr_schedule = CosineAnnealingLRScheduler(
-                alpha_max=float(params["alpha_max"]),
+                alpha_max=float(train_config["lr"]),
                 alpha_min=float(params["alpha_min"]),
                 Tw=int(params["Tw"]),
                 Tc=int(params["Tc"])

@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     optim = determined_optimizer(model, train_config)
 
-    load_checkpoint("./models/gpt2_tiny_checkpoint_999.pt", model, optim)
+    load_checkpoint("/Users/bytedance/code/stanford-cs336-assignment1-basics/models/gpt2_tiny_checkpoint_9_more_total_tokens.pt", model, optim)
     
     text = "A bug in red boots crawled into my pencil case. When I opened it, there was a tiny letter: 'Help, the erasers are"
 

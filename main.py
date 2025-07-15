@@ -19,13 +19,15 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
+    model_config = get_model_config(args.model)
+    train_config = get_train_config(args.train)
+
     wandb.init(
         project='cs336_assignment1_jiacheng',
         entity='jiacheng-luo',
+        name=model_config["name"] + "_" + train_config["name"]
     )
-
-    model_config_path = args.model
-    model_config = get_model_config(model_config_path)
+    
     try:
         model = construct_model(model_config)
     except Exception as exc:
@@ -34,8 +36,8 @@ if __name__ == "__main__":
     print(f"实际可训练参数: {get_module_param_count(model) / (1000 * 1000):.4f} M")
     print(f"实际占用内存: {get_module_memory_bytes(model) / (1024 * 1024):.4f} MB")
 
-    train_config_path = args.train
-    train_config = get_train_config(train_config_path)
+    
+    
     
     optim = determined_optimizer(
         model,
@@ -47,8 +49,6 @@ if __name__ == "__main__":
     train_dataset = dataset_loading(bpe_tokenizer, train_config["train_dataset_path"], special_tokens, train_config["cache_dir"])
     test_dataset = dataset_loading(bpe_tokenizer, train_config["test_dataset_path"], special_tokens, train_config["cache_dir"])
     
-    model_saved_path = train_config["model_saved_path"] + model_config["name"]
-
     for t in tqdm(range(train_config["num_epoch"]), desc="Training Model"):
         optim.zero_grad()
 
@@ -94,4 +94,6 @@ if __name__ == "__main__":
             wandb.log({
                 "Validation Loss": loss.detach().float()
             }, step=t)
-    save_checkpoint(model, optim, t, f"""{model_saved_path}_checkpoint_{t}_lr_{train_config["lr"]}.pt""")
+    model_saved_path = train_config["model_saved_path"] + model_config["name"] + f"""_checkpoint_{t}_{train_config["name"]}.pt"""
+    save_checkpoint(model, optim, t, model_saved_path)
+    print(f"""[done] saved model [{model_config["name"]}_checkpoint_{t}_{train_config["name"]}.pt] in {train_config["model_saved_path"]} !""")
