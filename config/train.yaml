@@ -13,8 +13,8 @@ lr_schedule:
   type: "cosine_annealing" 
   params:
     alpha_min: 1e-5
-    Tw: 1000
-    Tc: 10000
+    Tw: 2000
+    Tc: 20000
   # [optional]
   # type: "constant"
   # params:

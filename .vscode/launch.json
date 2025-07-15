@@ -24,6 +24,6 @@
                 "PYTHONPATH": "${workspaceFolder}"
             },
             "justMyCode": false
-        }
+        },
     ]
 }
