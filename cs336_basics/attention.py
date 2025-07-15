@@ -35,10 +35,10 @@ class MultiheadSelfAttention(nn.Module):
         self.d_model = d_model
         self.num_heads = num_heads
 
-        self.q_proj = Linear(d_model, d_model)
-        self.k_proj = Linear(d_model, d_model)
-        self.v_proj = Linear(d_model, d_model)
-        self.output_proj = Linear(d_model, d_model)
+        self.q_proj = Linear(d_model, d_model, device, dtype)
+        self.k_proj = Linear(d_model, d_model, device, dtype)
+        self.v_proj = Linear(d_model, d_model, device, dtype)
+        self.output_proj = Linear(d_model, d_model, device, dtype)
 
     def forward(self, x: torch.Tensor):
         seq_len = x.shape[-2]

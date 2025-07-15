@@ -6,4 +6,4 @@ d_ff: 1344
 num_layers: 4
 num_heads: 16
 rope_theta: 10000
-device: "mps"
+device: "cuda"

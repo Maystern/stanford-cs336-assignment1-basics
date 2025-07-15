@@ -1,6 +1,7 @@
 import wandb
 import argparse
 import torch
+import sys
 
 from tqdm import tqdm
 from einops import rearrange
@@ -35,9 +36,6 @@ if __name__ == "__main__":
 
     print(f"实际可训练参数: {get_module_param_count(model) / (1000 * 1000):.4f} M")
     print(f"实际占用内存: {get_module_memory_bytes(model) / (1024 * 1024):.4f} MB")
-
-    
-    
     
     optim = determined_optimizer(
         model,

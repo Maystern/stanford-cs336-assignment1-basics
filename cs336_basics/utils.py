@@ -4,7 +4,7 @@ import math
 from torch import nn
 from typing import Iterable
 
-def SiLU(x: torch.Tensor):
+def SiLU(x: torch.Tensor) -> torch.Tensor:
     return x * torch.sigmoid(x)
 
 def softmax(x: torch.Tensor, dim: int) -> torch.Tensor:

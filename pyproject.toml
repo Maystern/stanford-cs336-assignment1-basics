@@ -17,7 +17,6 @@ dependencies = [
     "torch~=2.6.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
     "torch~=2.2.2; sys_platform == 'darwin' and platform_machine == 'x86_64'", # Intel Macs
     "tqdm>=4.67.1",
-    "wandb>=0.19.7",
     "ipykernel>=6.29.5",
     "snakeviz>=2.2.2",
     "rich>=14.0.0",
@@ -25,6 +24,7 @@ dependencies = [
     "pympler>=1.1",
     "pyyaml>=6.0.2",
     "pytorch-memlab>=0.3.0",
+    "wandb>=0.21.0",
 ]
 
 
@@ -55,3 +55,7 @@ extend-select = ["UP"]
 ignore = [
     "F722"
 ]
+
+[[index]]
+url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/"
+default = true

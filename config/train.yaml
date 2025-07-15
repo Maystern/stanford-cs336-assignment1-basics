@@ -1,4 +1,4 @@
-name: "token_config_128x10000x256"
+name: "token_config_64x20000x256"
 lr: 1e-3
 weight_decay: 1e-4
 betas: [0.9, 0.999]
@@ -7,8 +7,8 @@ train_dataset_path: "./data/TinyStoriesV2-GPT4-train.txt"
 test_dataset_path: "./data/TinyStoriesV2-GPT4-valid.txt"
 cache_dir: "./cache/"
 special_tokens: ["<|endoftext|>"]
-num_epoch: 10000
-batch_size: 128
+num_epoch: 20000
+batch_size: 64
 lr_schedule:
   type: "cosine_annealing" 
   params:

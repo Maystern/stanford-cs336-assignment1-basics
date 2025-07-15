@@ -44,7 +44,7 @@ def run_linear(
     
     linear_layer = Linear(d_in, d_out, DEVICE, weights.dtype)
     linear_layer.load_state_dict({"weight": weights.to(DEVICE)})
-    return linear_layer(in_features)
+    return linear_layer(in_features.to(DEVICE))
 
 
 def run_embedding(
@@ -67,7 +67,7 @@ def run_embedding(
     """
     embedding_layer = Embedding(vocab_size, d_model, DEVICE, weights.dtype)
     embedding_layer.load_state_dict({"weight": weights.to(DEVICE)})
-    return embedding_layer(token_ids)
+    return embedding_layer(token_ids.to(DEVICE))
 
 
 def run_swiglu(
@@ -106,7 +106,7 @@ def run_swiglu(
         "w2.weight": w2_weight,
         "w3.weight": w3_weight,
     })
-    return SwiGLU_layer(in_features)
+    return SwiGLU_layer(in_features.to(DEVICE))
 
 
 def run_scaled_dot_product_attention(
@@ -168,7 +168,7 @@ def run_multihead_self_attention(
         "v_proj.weight": v_proj_weight,
         "output_proj.weight": o_proj_weight,
     })
-    return multihead_self_attention_layer(in_features)
+    return multihead_self_attention_layer(in_features.to(DEVICE))
 
 
 def run_multihead_self_attention_with_rope(
@@ -215,7 +215,7 @@ def run_multihead_self_attention_with_rope(
         "v_proj.weight": v_proj_weight,
         "output_proj.weight": o_proj_weight,
     })
-    return multihead_self_attention_with_rope_layer(in_features, token_positions)
+    return multihead_self_attention_with_rope_layer(in_features.to(DEVICE), token_positions.to(DEVICE))
 
 
 def run_rope(
@@ -238,7 +238,7 @@ def run_rope(
         Float[Tensor, " ... sequence_length d_k"]: Tensor with RoPEd input.
     """
     RoPE_layer = RoPE(theta, d_k, max_seq_len, device=DEVICE)
-    return RoPE_layer(in_query_or_key, token_positions)
+    return RoPE_layer(in_query_or_key.to(DEVICE), token_positions.to(DEVICE))
 
 
 def run_transformer_block(
@@ -317,7 +317,7 @@ def run_transformer_block(
         break
     transformer_block = TransformerBlock(d_model, num_heads, d_ff, max_seq_len, theta, DEVICE, dtype)
     transformer_block.load_state_dict(weights)
-    return transformer_block(in_features)
+    return transformer_block(in_features.to(DEVICE))
 
 
 def run_transformer_lm(
@@ -405,7 +405,7 @@ def run_transformer_lm(
         break
     transformer = Transformer(vocab_size, context_length, d_model, num_layers, num_heads, d_ff, rope_theta, DEVICE, dtype)
     transformer.load_state_dict(weights)
-    return transformer(in_indices)
+    return transformer(in_indices.to(DEVICE))
 
 
 def run_rmsnorm(
@@ -430,7 +430,7 @@ def run_rmsnorm(
     """
     rmsNorm_layer = RMSNorm(d_model, eps, DEVICE, weights.dtype)
     rmsNorm_layer.load_state_dict({"weight": weights})
-    return rmsNorm_layer(in_features)
+    return rmsNorm_layer(in_features.to(DEVICE))
 
 
 def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
@@ -444,7 +444,7 @@ def run_silu(in_features: Float[Tensor, " ..."]) -> Float[Tensor, " ..."]:
         Float[Tensor,"..."]: of with the same shape as `in_features` with the output of applying
         SiLU to each element.
     """
-    return SiLU(in_features)
+    return SiLU(in_features.to(DEVICE)).cpu()
 
 
 def run_get_batch(
@@ -467,8 +467,7 @@ def run_get_batch(
         is the sampled input sequences, and the second tuple item is the corresponding
         language modeling labels.
     """
-    return data_loading(dataset, batch_size, context_length,  device)
-    # raise NotImplementedError
+    return data_loading(dataset, batch_size, context_length, device)
 
 
 def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, " ..."]:
@@ -484,7 +483,7 @@ def run_softmax(in_features: Float[Tensor, " ..."], dim: int) -> Float[Tensor, "
         Float[Tensor, "..."]: Tensor of with the same shape as `in_features` with the output of
         softmax normalizing the specified `dim`.
     """
-    return softmax(in_features, dim)
+    return softmax(in_features.to(DEVICE), dim).cpu()
 
 
 def run_cross_entropy(inputs: Float[Tensor, " batch_size vocab_size"], targets: Int[Tensor, " batch_size"]) -> Float[Tensor, ""]:

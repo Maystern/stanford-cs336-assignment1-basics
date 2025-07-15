@@ -2,169 +2,17 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "current file - Main Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "usage.py",
-            "args": [],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "BPE Tokenizer - PyTest Debugger",
+            "name": "PyTest Debug",
             "type": "debugpy",
             "request": "launch",
             "module": "pytest",
-            "args": ["tests/test_train_bpe.py"],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-       {
-            "name": "BPE Tokenizer - Main Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "cs336_basics/train_bpe.py",
-            "args": [],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Tokenizer - Main Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "cs336_basics/tokenizer.py",
-            "args": [],
-            "console": "integratedTerminal"
-        },
-        {
-            "name": "Tokenizer - PyTest Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": ["tests/test_tokenizer.py"],
             "justMyCode": false,
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"
             }
         },
         {
-            "name": "Linear - PyTest Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "-k",
-                "test_linear",
-                "-v"
-            ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "SwiGLU - PyTest Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "-k",
-                "test_swiglu",
-            ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "softmax - PyTest Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "-k",
-                "test_softmax_matches_pytorch",
-            ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "Attention - PyTest Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "-k",
-                "test_multihead_self_attention",
-            ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            "name": "Transformer - PyTest Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "-k",
-                "test_transformer_lm",
-            ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            // uv run pytest -k test_cross_entropy
-            "name": "Cross Entropy - PyTest Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "-k",
-                "test_cross_entropy",
-            ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            // uv run pytest -k test_adamw
-            "name": "AdamW - PyTest Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "-k",
-                "test_adamw",
-            ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
-            // uv run pytest -k test_gradient_clipping
-            "name": "Gradient Clipping - PyTest Debugger",
-            "type": "debugpy",
-            "request": "launch",
-            "module": "pytest",
-            "args": [
-                "-k",
-                "test_gradient_clipping",
-            ],
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        }, 
-        {
-            "name": "Debug Main Script",
+            "name": "Train Debug",
             "type": "debugpy",
             "request": "launch",
             "program": "main.py",

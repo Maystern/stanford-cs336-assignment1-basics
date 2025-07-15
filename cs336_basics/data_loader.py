@@ -31,8 +31,9 @@ def dataset_loading(tokenizer: Tokenizer, dataset_path: str, special_tokens: Lis
         print(f"""loading [{dataset_name + "_encoded_tokens.dat"}] from cache successfully!""")
         return mmap_array
     except Exception as e:
-        print(e)
+        print(f"""在 cache 中没有 [{dataset_name + "_encoded_tokens.dat"}] 文件, 需要重新映射""")
         pass
+
     num_processes = os.cpu_count()
     print(f"tokenize the dataset with {num_processes} cpus.")
     params = []
