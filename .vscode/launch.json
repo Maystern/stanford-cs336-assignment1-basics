@@ -17,8 +17,9 @@
             "request": "launch",
             "program": "main.py",
             "args": [
-                "-t", "./config/train.yaml",
-                "-m", "./config/gpt2_tiny.yaml"
+                // "-t", "./config/train.yaml",
+                "-t", "/root/autodl-tmp/stanford-cs336-assignment1-basics/config/batch_size_exp_2x640000x256/train.yaml",
+                "-m", "/root/autodl-tmp/stanford-cs336-assignment1-basics/config/batch_size_exp_2x640000x256/gpt2_tiny.yaml"
             ],
             "env": {
                 "PYTHONPATH": "${workspaceFolder}"

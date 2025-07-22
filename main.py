@@ -1,3 +1,4 @@
+import os
 import wandb
 import argparse
 import torch
@@ -6,13 +7,13 @@ from einops import rearrange
 from cs336_basics.utils import get_module_memory_bytes, cross_entropy, gradient_lr_norm_sum_calc, get_module_param_count
 
 from cs336_basics.data_loader import data_loading, dataset_loading
-from cs336_basics.checkpoint import save_checkpoint
+from cs336_basics.checkpoint import save_checkpoint, load_checkpoint
 from cs336_basics.common import determined_optimizer, get_train_config, get_model_config, construct_model, construct_tokenizer
 
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='处理命令行参数示例')
+    parser = argparse.ArgumentParser(description='')
     parser.add_argument('--model', '-m', help='输入模型配置文件路径')
     parser.add_argument('--train', '-t', help='输出文输入训练配置文件路径件路径')
 
@@ -21,12 +22,29 @@ if __name__ == "__main__":
     model_config = get_model_config(args.model)
     train_config = get_train_config(args.train)
 
-    wandb.init(
-        project='cs336_assignment1_jiacheng',
-        entity='jiacheng-luo',
-        name=model_config["name"] + "_" + train_config["name"]
-    )
-    
+    load_local_training_rec = True
+
+    if "run_id" in train_config["wandb"] and train_config["wandb"]["run_id"] != "":
+        run = wandb.init(
+            project=train_config["wandb"]["project"],
+            id=train_config["wandb"]["run_id"],
+            resume="must"
+        )
+        print(f"[run_id] load run_id from train_config, run_id = {run.id}")
+    else:
+        run = wandb.init(
+            project=train_config["wandb"]["project"],
+            entity=train_config["wandb"]["entity"],
+            name=model_config["name"] + "_" + train_config["name"],
+            config={
+                "model_config": model_config,
+                "train_config": train_config
+            },
+            resume="allow"
+        )
+        print(f"[run_id] new run_id = {run.id}")
+        load_local_training_rec = False
+
     try:
         model = construct_model(model_config)
     except Exception as exc:
@@ -44,16 +62,32 @@ if __name__ == "__main__":
     bpe_tokenizer = construct_tokenizer(train_config, model_config)
     train_dataset = dataset_loading(bpe_tokenizer, train_config["train_dataset_path"], special_tokens, train_config["cache_dir"])
     test_dataset = dataset_loading(bpe_tokenizer, train_config["test_dataset_path"], special_tokens, train_config["cache_dir"])
+
+    saved_t = 0
+    saved_t_rec_path = None
+
+    if load_local_training_rec:
+        for t in range(train_config["model_saved_interval"], train_config["num_epoch"] + 1, train_config["model_saved_interval"]):
+            model_saved_path = train_config["model_saved_path"] + train_config["name"] + "/" + model_config["name"] + f"""_checkpoint_{t}.pt"""
+            if os.path.exists(model_saved_path):
+                saved_t = t
+                saved_t_rec_path = model_saved_path
+            else:
+                break
+        
+        if saved_t_rec_path is not None:
+            print(f"resume model and optimizer from {saved_t_rec_path}")
+            load_checkpoint(saved_t_rec_path, model, optim)
     
-    for t in tqdm(range(train_config["num_epoch"]), desc="Training Model"):
+    for t in tqdm(range(saved_t, train_config["num_epoch"]), desc="Training Model"):
         optim.zero_grad()
 
         # 训练
         train_batch_input, train_batch_target = data_loading(
-            train_dataset,
-            train_config["batch_size"],
-            context_length=model_config["context_length"],
-            device=model_config["device"]  # 确保是 "mps" 设备
+            dataset = train_dataset,
+            batch_size = int(train_config["batch_size"]["train"]),
+            context_length=int(model_config["context_length"]),
+            device=str(model_config["device"])
         )
         model.train()
         train_batch_out = model(train_batch_input)
@@ -76,10 +110,10 @@ if __name__ == "__main__":
 
         # 验证
         valid_batch_input, valid_batch_target = data_loading(
-            test_dataset,
-            train_config["batch_size"],
-            context_length=model_config["context_length"],
-            device=model_config["device"]  # 确保是 "mps" 设备
+            dataset=test_dataset,
+            batch_size=int(train_config["batch_size"]["eval"]),
+            context_length=int(model_config["context_length"]),
+            device=str(model_config["device"])
         )
         model.eval()
         with torch.no_grad():
@@ -90,6 +124,9 @@ if __name__ == "__main__":
             wandb.log({
                 "Validation Loss": loss.detach().float()
             }, step=t)
-    model_saved_path = train_config["model_saved_path"] + model_config["name"] + f"""_checkpoint_{t}_{train_config["name"]}.pt"""
-    save_checkpoint(model, optim, t, model_saved_path)
-    print(f"""[done] saved model [{model_config["name"]}_checkpoint_{t}_{train_config["name"]}.pt] in {train_config["model_saved_path"]} !""")
+        
+        if (t + 1) % int(train_config["model_saved_interval"]) == 0:
+            model_saved_dir = train_config["model_saved_path"] + train_config["name"] + "/"
+            model_saved_path = model_saved_dir + model_config["name"] + f"""_checkpoint_{t + 1}.pt"""
+            os.makedirs(model_saved_dir, exist_ok=True)
+            save_checkpoint(model, optim, t, model_saved_path)

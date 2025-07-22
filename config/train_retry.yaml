@@ -1,25 +1,32 @@
-name: "token_config_1x1280000x256"
+name: "retry_debug"
 lr: 1e-3
 weight_decay: 1e-4
 betas: [0.9, 0.999]
 eps: 1e-8
-train_dataset_path: "./data/TinyStoriesV2-GPT4-train.txt"
+train_dataset_path: "./data/TinyStoriesV2-GPT4-valid.txt"
 test_dataset_path: "./data/TinyStoriesV2-GPT4-valid.txt"
 cache_dir: "./cache/"
 special_tokens: ["<|endoftext|>"]
-num_epoch: 1280000
-batch_size: 1
+num_epoch: 20000
+batch_size: 
+  train: 64
+  eval: 64
 lr_schedule:
   type: "cosine_annealing" 
   params:
     alpha_min: 1e-5
-    Tw: 128000
-    Tc: 1280000
+    Tw: 100
+    Tc: 1000
   # [optional]
   # type: "constant"
   # params:
   #   lr: 1e-3
+model_saved_interval: 10
 model_saved_path: "./models/"
 gradient_clipping:
   enable: true
   max_l2_norm: 1.0
+wandb:
+  project: cs336_assignment1_jiacheng
+  entity: jiacheng-luo
+  run_id: "e42wy27e"

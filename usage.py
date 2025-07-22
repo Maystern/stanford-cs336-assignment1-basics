@@ -17,9 +17,9 @@ if __name__ == "__main__":
 
     optim = determined_optimizer(model, train_config)
 
-    load_checkpoint("/Users/bytedance/code/stanford-cs336-assignment1-basics/models/gpt2_tiny_checkpoint_9_more_total_tokens.pt", model, optim)
+    load_checkpoint("./models/gpt2_tiny_checkpoint_39999_token_config_32x40000x256.pt", model, optim)
     
-    text = "A bug in red boots crawled into my pencil case. When I opened it, there was a tiny letter: 'Help, the erasers are"
+    text = "Once upon a time, there was a pretty girl named Lily. She loved to eat gum"
 
     bpe_tokenizer = construct_tokenizer(train_config, model_config)
     encoded_list = bpe_tokenizer.encode(text)
@@ -33,10 +33,8 @@ if __name__ == "__main__":
     print(f"encoded_list = {encoded_list}")
     print(f"encoded_special_tokens = {encoded_special_tokens}")
 
-    decoded_result = decoding(model, encoded_list, 100, encoded_special_tokens, 0.8, 0.9, torch.device(model_config["device"]))
+    decoded_result = decoding(model, encoded_list, 256, encoded_special_tokens, 0.9, 0.95, torch.device(model_config["device"]))
     print(decoded_result)
     print(f"生产的 token 总数为 {len(decoded_result)} 总文本 token 为 {len(encoded_list) + len(decoded_result)}")
-
     result = bpe_tokenizer.decode(decoded_result)
-    
     print(text + result)
